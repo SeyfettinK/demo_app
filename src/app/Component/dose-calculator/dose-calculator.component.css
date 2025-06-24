@@ -1,0 +1,174 @@
+.dose-calculator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f7fa;
+}
+
+.form-container {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 600px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 26px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+input:focus, select:focus {
+  border-color: #007bff;
+}
+
+/* Row içinde 3 sütun: Bebek kilosu, doz miktarı ve doz birimi */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2%;
+}
+
+/* Bebek kilosu alanı %35 genişlik */
+.weight-group {
+  flex: 0 0 30%;
+}
+
+/* Doz miktarı alanı %35 genişlik */
+.dose-group {
+  flex: 0 0 45%;
+}
+
+/* Doz birimi alanı %10 genişlik */
+.unit-group {
+  flex: 0 0 15%;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  font-size: 18px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.results {
+  margin-top: 20px;
+  padding: 15px;
+  background: #e9f5ff;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.results p {
+  margin: 5px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.medication-info {
+  margin-top: 15px;
+  padding: 10px;
+  background: #f1f1f1;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.medication-info p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.dose-warning {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+}
+/* Row içinde üç sütun: Bebek kilosu, doz miktarı ve doz birimi */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2%;
+}
+
+
+
+/* Zaman (infüzyon süresi) inputları */
+.input-group.time-group {
+  display: flex;
+  gap: 10px;
+}
+.input-group.time-group input {
+  flex: 1;
+}
+
+/* İnfüzyon modunun seçenekleri */
+.infusion-mode {
+  margin-bottom: 15px;
+  text-align: left;
+}
+.mode-options {
+  display: flex;
+  gap: 20px;
+  margin-top: 5px;
+}
+.mode-options label {
+  font-weight: normal;
+}
+.explanation {
+  font-size: 14px;
+  margin: 10px 0 15px;
+  color: #555;
+}
+
+.dilution-amounts p {
+  margin: 8px 0;
+  font-size: 15px;
+}
+
+.additional-fluid {
+  margin-top: 15px;
+  background-color: #fff8e1;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.preparation-info {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #444;
+}

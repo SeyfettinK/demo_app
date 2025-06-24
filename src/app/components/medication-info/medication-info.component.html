@@ -1,0 +1,66 @@
+<div *ngIf="medication" class="mt-6 flex flex-col gap-4 w-full">
+
+  <!-- Endikasyonlar -->
+  <div class="flex items-start gap-3 bg-white border border-gray-200 rounded-xl p-4 w-full shadow-sm">
+    <span class="text-blue-500 mt-1">
+      <!-- Bilgi ikonu -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M13 16h-1v-4h-1m0-4h.01M12 12a9 9 0 110-18 9 9 0 010 18z" />
+      </svg>
+    </span>
+    <div class="flex-1">
+      <div class="font-semibold text-sm text-blue-600">Endikasyonlar</div>
+      <div class="text-sm text-gray-700">{{ medication.indications }}</div>
+    </div>
+  </div>
+
+  <!-- Uyumsuz İlaçlar -->
+  <div class="flex items-start gap-3 bg-white border border-gray-200 rounded-xl p-4 w-full shadow-sm">
+    <span class="text-red-500 mt-1">
+      <!-- Hata ikonu -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </span>
+    <div class="flex-1">
+      <div class="font-semibold text-sm text-red-600">Uyumsuz İlaçlar</div>
+      <div class="text-sm text-gray-700">{{ medication.incompatibleDrugs }}</div>
+    </div>
+  </div>
+
+  <!-- Saklama Koşulları -->
+  <div class="flex items-start gap-3 bg-white border border-gray-200 rounded-xl p-4 w-full shadow-sm">
+    <span class="text-yellow-500 mt-1">
+      <!-- Zaman ikonu -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </span>
+    <div class="flex-1">
+      <div class="font-semibold text-sm text-yellow-600">Saklama Koşulları</div>
+      <div class="text-sm text-gray-700">{{ medication.storageConditions }}</div>
+    </div>
+  </div>
+
+  <!-- Önemli Notlar -->
+  <div class="flex items-start gap-3 bg-white border border-gray-200 rounded-xl p-4 w-full shadow-sm">
+    <span class="text-purple-500 mt-1">
+      <!-- Not ikonu -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8c-1.104 0-2 .896-2 2v2h4v-2c0-1.104-.896-2-2-2zM12 16h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </span>
+    <div class="flex-1">
+      <div class="font-semibold text-sm text-purple-600">Önemli Notlar</div>
+      <div class="text-sm text-gray-700">{{ medication.importantNotes }}</div>
+    </div>
+  </div>
+</div>

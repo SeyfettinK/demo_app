@@ -1,0 +1,386 @@
+<!-- dose-calculator.component.html -->
+<div class="min-h-screen bg-gray-100 p-6">
+  <!-- Başlık -->
+  <h1 class="mb-6 text-center text-3xl font-semibold text-gray-800 lg:text-4xl">
+    İlaç Doz Hesaplama
+  </h1>
+
+  <!-- Grid layout -->
+  <div class="mx-auto grid max-w-7xl grid-cols-1 gap-8 lg:grid-cols-2">
+
+    <!-- ◀︎ FORM BLOKU ------------------------------------------------------------------->
+    <section class="space-y-6 rounded-xl bg-white p-6 shadow-md">
+
+      <!-- İlaç Seçimi -->
+      <div>
+        <label for="medication" class="mb-1 block font-medium text-gray-700">
+          İlaç Seç:
+        </label>
+        <select
+          id="medication"
+          class="w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:outline-none"
+          [(ngModel)]="selectedMedication"
+          (change)="onMedicationSelect()"
+        >
+          <option *ngFor="let med of medications" [ngValue]="med">
+            {{ med.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- ▼▼▼ YAŞ & YÜKLEME-İDAME SEÇİMİ (yalnız doseGuide varsa) ▼▼▼ -->
+      <div *ngIf="selectedMedication?.doseGuide?.length" class="grid gap-4 lg:grid-cols-2">
+
+        <!-- Yaş girişi -->
+        <div>
+          <label class="mb-1 block font-medium text-gray-700">
+            Bebek Yaşı (gün):
+          </label>
+          <input
+            type="number"
+            min="0"
+            class="w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:outline-none"
+            [(ngModel)]="babyAgeDays"
+            (change)="applyDoseGuide(); disablePreviousResults()"
+            placeholder="Örn: 5"
+          />
+        </div>
+
+        <!-- Yükleme / İdame radyo -->
+        <div class="flex items-end gap-6 text-sm">
+          <label class="flex items-center gap-1">
+            <input type="radio" class="h-5 w-5 cursor-pointer rounded-full border-2 border-gray-300
+           accent-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+           transition-all"
+                   name="doseType"
+                   [(ngModel)]="doseType" value="loading"
+                   (change)="applyDoseGuide(); disablePreviousResults()" />
+            Yükleme
+          </label>
+          <label *ngIf="hasMaintenanceDose" class="flex items-center gap-1">
+            <input type="radio" class="h-5 w-5 cursor-pointer rounded-full border-2 border-gray-300
+           accent-emerald-600 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1
+           transition-all"
+                   name="doseType"
+                   [(ngModel)]="doseType" value="maintenance"
+                   (change)="applyDoseGuide(); disablePreviousResults()" />
+            İdame
+          </label>
+        </div>
+
+        <!-- Öneri etiketi -->
+        <div *ngIf="doseSuggested" class="lg:col-span-2 text-sm text-emerald-700">
+          Önerilen doz: <strong>{{ doseSuggested }}</strong>
+          <!-- varsa, yalnız seçili doz türünün notu görünür -->
+          <span *ngIf="doseNote"> — {{ doseNote }}</span>
+        </div>
+      </div>
+      <!-- ▲▲▲ YAŞ & YÜKLEME-İDAME PANELİ ▲▲▲ -->
+
+      <!-- Bebek Kilosu, Doz, Birim (grid) -->
+      <div class="grid gap-4 lg:grid-cols-3">
+        <!-- Kilo -->
+        <div>
+          <label for="weight" class="mb-1 block font-medium text-gray-700">
+            Bebek Kilosu (gram):
+          </label>
+          <input
+            id="weight"
+            type="number"
+            step="1"
+            class="w-full rounded-md border border-gray-300 p-3 disabled:bg-gray-100 focus:border-blue-500 focus:outline-none"
+            [(ngModel)]="babyWeightInputGr"
+            (input)="convertToKg(); checkDoseValidity(); disablePreviousResults()"
+            placeholder="Örn: 3500"
+            [disabled]="!isWeightRequired || !isDoseReady"
+          />
+        </div>
+
+        <!-- Doz -->
+        <div>
+          <label for="dose" class="mb-1 block font-medium text-gray-700">
+            Doz Miktarı:
+          </label>
+          <input
+            id="dose"
+            type="number"
+            step="0.01"
+            class="w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:outline-none"
+            [(ngModel)]="doseAmount"
+            (input)="checkDoseValidity(); disablePreviousResults()"
+            placeholder="Örn: 10"
+            [disabled]="!isDoseReady"
+          />
+        </div>
+
+        <!-- Birim -->
+        <div>
+          <label class="mb-1 block font-medium text-gray-700">&nbsp;</label>
+          <select
+            id="doseUnit"
+            class="w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:outline-none"
+            [(ngModel)]="doseUnit"
+            (change)="checkDoseValidity(); disablePreviousResults()"
+            [disabled]="!isDoseReady"
+          >
+            <option value="mg">mg</option>
+            <option value="mcg">mcg</option>
+            <option value="IU">IU</option>
+          </select>
+        </div>
+      </div>
+
+
+
+      <!-- Dilution mode seçimi -->
+      <div *ngIf="hasBolus && hasInfusion" class="mb-4 flex gap-6 text-sm">
+        <span class="font-medium">Sulandırma Tipi:</span>
+        <label class="flex items-center gap-1">
+          <input type="radio"  (change)="onDilutionModeChange(); disablePreviousResults()" name="dilutionMode" [(ngModel)]="dilutionMode" value="bolus" class="h-5 w-5 cursor-pointer rounded-full border-2 border-gray-300
+           accent-fuchsia-600 focus:ring-2 focus:ring-fuchsia-500 focus:ring-offset-1
+           transition-all"/>
+          Bolus
+        </label>
+        <label class="flex items-center gap-1">
+          <input type="radio" (change)="onDilutionModeChange(); disablePreviousResults()" name="dilutionMode" [(ngModel)]="dilutionMode" value="infusion" class="h-5 w-5 cursor-pointer rounded-full border-2 border-gray-300
+           accent-orange-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-1
+           transition-all"/>
+          İnfüzyon
+        </label>
+      </div>
+
+      <!-- İnfüzyon Modu -->
+      <div *ngIf="showInfusionControls  " class="text-sm text-gray-700">
+        <span class="font-medium">Hesaplama Modu:</span>
+        <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:gap-6">
+          <label class="flex items-center gap-2">
+            <input
+              type="radio"
+              class="h-5 w-5 cursor-pointer rounded-full border-2 border-gray-300
+           accent-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+           transition-all"
+              name="infusionMode"
+              [(ngModel)]="infusionCalculationMode"
+              value="toplam"
+              (change)="checkDoseValidity(); disablePreviousResults()"
+            />
+            Toplam Süre
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input
+              type="radio"
+              class="h-5 w-5 cursor-pointer rounded-full border-2 border-gray-300
+           accent-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+           transition-all"
+              name="infusionMode"
+              [(ngModel)]="infusionCalculationMode"
+              value="saatlik"
+              (change)="checkDoseValidity(); disablePreviousResults()"
+            />
+            Saatlik Doz
+          </label>
+          <!-- Bolus – yeni -->
+          <label class="flex items-center gap-2">
+            <input type="radio" class="h-5 w-5 cursor-pointer rounded-full border-2 border-gray-300
+           accent-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+           transition-all"
+                   name="infusionMode"
+                   [(ngModel)]="infusionCalculationMode"
+                   value="bolus"
+                   (change)="checkDoseValidity() ; disablePreviousResults()"/>
+            Bolus
+          </label>
+        </div>
+      </div>
+
+      <!-- Süre Girişleri -->
+      <div
+        *ngIf="showInfusionControls && infusionCalculationMode === 'toplam'"
+        class="grid gap-3 sm:grid-cols-2"
+      >
+        <div>
+          <label class="mb-1 block font-medium text-gray-700">Saat</label>
+          <input
+            type="number"
+            step="1"
+            class="w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:outline-none"
+            [(ngModel)]="infusionHours"
+            (input)="checkDoseValidity(); disablePreviousResults()"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block font-medium text-gray-700">Dakika</label>
+          <input
+            type="number"
+            step="1"
+            max="59"
+            class="w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:outline-none"
+            [(ngModel)]="infusionMinutes"
+            (input)="checkDoseValidity();disablePreviousResults()"
+          />
+        </div>
+      </div>
+
+      <div
+        *ngIf="showInfusionControls && infusionCalculationMode === 'saatlik'"
+      >
+        <label for="totalHours" class="mb-1 block font-medium text-gray-700">
+          Toplam Saat:
+        </label>
+        <select
+          id="totalHours"
+          class="w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:outline-none"
+          [(ngModel)]="infusionHoursTotal"
+          (change)="checkDoseValidity() ; disablePreviousResults()"
+        >
+          <option value="" disabled selected>Seçiniz</option>
+          <option *ngFor="let hrs of [4, 8, 12, 16, 20, 24]" [value]="hrs">
+            {{ hrs }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Doz Uyarısı -->
+      <p *ngIf="doseWarning" class="text-sm font-medium text-red-600">
+        {{ doseWarning }}
+      </p>
+      <app-medication-info
+        *ngIf="selectedMedication"
+        [medication]="selectedMedication"
+      ></app-medication-info>
+      <!-- Hesap düğmeleri -->
+      <div class="mt-4 grid gap-3 sm:grid-cols-2">
+        <button
+          class="w-full rounded-md bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700"
+          (click)="calculateDilution()"
+        >
+          Klasik Min/Max
+        </button>
+
+        <button
+          class="w-full rounded-md bg-emerald-600 py-3 font-semibold text-white hover:bg-emerald-700"
+          (click)="calculateGuideDoseVolume()"
+          [disabled]="!selectedMedication?.dilution"
+        >
+          Rehber Hacim Hesapla
+        </button>
+
+      </div>
+    </section>
+
+    <!-- ▶︎ SONUÇ/İLAÇ BİLGİ BLOKU ------------------------------------------------------->
+    <section class="space-y-6">
+      <!-- İlacın Özet Bilgisi -->
+      <div
+        *ngIf="selectedMedication"
+        class="rounded-xl bg-white p-6 text-sm shadow-md"
+      >
+        <h2 class="mb-2 text-base font-semibold text-gray-800">İlaç Özeti</h2>
+        <p><strong>🕒 Hız:</strong> {{ selectedMedication.administrationRate }}</p>
+        <p><strong>💉 Yöntem:</strong> {{ selectedMedication.applicationMethod }}</p>
+        <p><strong>📌 Endikasyon:</strong> {{ selectedMedication.indications }}</p>
+      </div>
+      <!-- Sulandırma paneli -->
+      <div *ngIf="currentDilution as dilution" class="mt-6 rounded-xl bg-white p-6 shadow">
+        <h3 class="mb-2 text-base font-semibold text-gray-800">
+          Sulandırma Rehberi
+        </h3>
+
+        <ul class="list-disc pl-5 text-sm text-gray-700">
+          <li *ngFor="let s of dilution.steps">{{ s }}</li>
+        </ul>
+
+        <p class="mt-3 text-sm">
+          <strong>Son konsantrasyon:</strong>
+          {{ dilution.finalConcentration }}
+        </p>
+      </div>
+
+      <!-- Hesaplama Sonucu -->
+      <div
+        *ngIf="minDilutionVolume !== null && maxDilutionVolume !== null"
+        class="rounded-xl bg-blue-50 p-6 shadow-md"
+      >
+        <h2 class="mb-3 text-base font-semibold text-gray-800">
+          Hesaplama Sonucu
+        </h2>
+
+        <!-- Sürekli infüzyon açıklaması -->
+        <div *ngIf="selectedMedication?.continuousInfusion" class="mb-4 text-sm">
+          <ng-container *ngIf="infusionCalculationMode === 'toplam'; else hourMode">
+            <p>
+              <strong>{{ infusionHours || 0 }} s {{ infusionMinutes || 0 }} dk</strong> sürede
+              toplam <strong>{{ doseAmount }} {{ doseUnit }}</strong>.
+            </p>
+          </ng-container>
+          <ng-template #hourMode>
+            <p>
+              Saatlik <strong>{{ doseAmount }} {{ doseUnit }}</strong> ×
+              <strong>{{ infusionHoursTotal || 0 }} s</strong> =
+              <strong>{{ (doseAmount || 0) * (infusionHoursTotal || 0) }} {{ doseUnit }}</strong>
+            </p>
+          </ng-template>
+        </div>
+
+        <ul class="space-y-1 text-sm">
+          <li>✅ Minimum: {{ minDilutionVolume }} mL</li>
+          <li>✅ Maksimum: {{ maxDilutionVolume }} mL</li>
+        </ul>
+
+        <div
+          *ngIf="minAdditionalFluid !== null && maxAdditionalFluid !== null"
+          class="mt-4 rounded-md bg-amber-50 p-4 text-sm"
+        >
+          <p>Ek sıvı • Min: {{ minAdditionalFluid }} mL • Max: {{ maxAdditionalFluid }} mL</p>
+        </div>
+
+        <div class="mt-4 rounded-md bg-gray-100 p-4 text-sm" *ngIf="selectedMedication">
+          <p><strong>🚫 Uyuşmaz:</strong> {{ selectedMedication.incompatibleDrugs }}</p>
+          <p><strong>⚠️ Notlar:</strong> {{ selectedMedication.importantNotes }}</p>
+        </div>
+
+
+      </div>
+      <!-- Rehber hacim sonucu -->
+      <div
+        *ngIf="doseVolumeMl !== null && currentDilution"
+        class="mt-6 rounded-xl bg-emerald-50 p-6 shadow text-sm text-gray-700"
+      >
+        <h3 class="mb-2 font-semibold text-emerald-800 text-base">Uygulama Bilgisi</h3>
+
+        <!-- Sürekli infüzyon açıklaması -->
+        <div *ngIf="selectedMedication?.continuousInfusion" class="mb-4">
+          <ng-container *ngIf="infusionCalculationMode === 'toplam'; else hourMode">
+            <p>
+              <strong>{{ infusionHours || 0 }} s {{ infusionMinutes || 0 }} dk</strong> sürede
+              toplam <strong>{{ doseAmount }} {{ doseUnit }}</strong>.
+            </p>
+          </ng-container>
+          <ng-template #hourMode>
+            <p>
+              Saatlik <strong>{{ doseAmount }} {{ doseUnit }}</strong> ×
+              <strong>{{ infusionHoursTotal || 0 }} s</strong> =
+              <strong>{{ (doseAmount || 0) * (infusionHoursTotal || 0) }} {{ doseUnit }}</strong>
+            </p>
+          </ng-template>
+        </div>
+
+        <!-- Ana açıklama metni -->
+        <p class="leading-relaxed text-base">
+          Seçilen ilaç: <strong class="text-gray-800">{{ selectedMedication?.name }}</strong><br />
+          Uygulanacak doz miktarı: <strong class="text-gray-800">{{ doseAmount }} {{ doseUnit }}</strong><br /><br />
+
+          Toplam hacmi <strong class="text-emerald-800">{{ currentDilution.finalVolumeMl }} mL</strong>,
+          konsantrasyonu <strong class="text-emerald-800">{{ currentDilution.finalConcentration }}</strong> olan çözeltiden(ilaçtan),
+          <strong class="text-emerald-800">{{ doseVolumeMl }} mL</strong> çekin ve hastaya uygulayın.
+        </p>
+
+        <p *ngIf="extraPrepNote" class="mt-4 font-medium text-red-600">
+          {{ extraPrepNote }}
+        </p>
+      </div>
+
+    </section>
+  </div>
+</div>
